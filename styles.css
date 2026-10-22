@@ -12,8 +12,10 @@
 .widget-dialogue[hidden]{display:none}
 @keyframes widget-pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 .widget-drag{user-select:none}
-.website-fieldset{border:0;padding:0;min-width:0}
-.website-fieldset legend{font-size:10px;font-weight:700;color:#725860;margin-bottom:6px;padding:0}
-.website-check-list{display:grid;grid-template-columns:1fr 1fr;gap:5px;max-height:190px;overflow:auto;padding:7px;border:1px solid var(--line);border-radius:11px;background:#fff}
+.website-fieldset{border:0;padding:0;min-width:0;max-height:320px;overflow:auto}
+.website-fieldset>h3{font-size:11px;color:#725860;margin:0 0 8px}
+.website-group{border:0;border-top:1px solid var(--line);padding:8px 0;margin:0 0 5px;min-width:0}
+.website-group legend{font-size:10px;font-weight:700;color:#725860;margin-bottom:6px;padding:0}
+.website-check-list{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:7px;border:1px solid var(--line);border-radius:11px;background:#fff}
 .website-check{display:flex;align-items:flex-start;gap:7px;padding:7px;border-radius:8px;background:#fff9f7;font-size:10px;line-height:1.4;color:var(--deep);cursor:pointer;overflow-wrap:anywhere}
 .website-check input{width:14px;height:14px;flex:none;margin:0;accent-color:var(--red)}

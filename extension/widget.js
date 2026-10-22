@@ -64,7 +64,7 @@ const panel = shadow.querySelector('.panel');
 const panelTime = shadow.querySelector('.panel-time');
 const dialogue = shadow.querySelector('.dialogue');
 let state = { status: 'idle', session: null, settings: {} };
-let enforcement = { protectionActive: false, allowedDomains: [] };
+let enforcement = { protectionActive: false, allowedDomains: [], restrictedDomains: [] };
 let todayFocusMinutes = 0;
 let drag = null;
 let moved = false;
@@ -132,16 +132,18 @@ function draw() {
       ? '<button data-action="end-session">End</button><button class="quiet" data-action="open-app">Open app</button>'
       : '<button data-action="open-app">Open POMIBERRY</button>';
 
-  let allowed = false;
+  let shouldShield = false;
   try {
     const current = new URL(location.href);
     const hostname = current.hostname.toLowerCase();
-    allowed = (hostname === '127.0.0.1' || hostname === 'localhost') && current.port === '4173';
-    allowed = allowed || (enforcement.allowedDomains || []).some(domain => hostname === domain || hostname.endsWith(`.${domain}`));
-  } catch { allowed = true; }
+    const app = (hostname === '127.0.0.1' || hostname === 'localhost') && current.port === '4173';
+    const allowed = (enforcement.allowedDomains || []).some(domain => hostname === domain || hostname.endsWith(`.${domain}`));
+    const restricted = (enforcement.restrictedDomains || []).some(domain => hostname === domain || hostname.endsWith(`.${domain}`));
+    shouldShield = !app && restricted && !allowed;
+  } catch { shouldShield = false; }
 
   const protectedNow = isFocus && state.settings?.protection === 'websites' && enforcement.protectionActive;
-  shieldHost.style.display = protectedNow && !allowed ? 'block' : 'none';
+  shieldHost.style.display = protectedNow && shouldShield ? 'block' : 'none';
 }
 
 function beginDrag(event) {

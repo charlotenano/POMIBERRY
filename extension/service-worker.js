@@ -17,6 +17,15 @@ function allowedDomainsFor(state) {
     : state?.settings?.allowedDomains;
   return normalizedDomains(sessionDomains);
 }
+function restrictedDomainsFor(state) {
+  const sessionDomains = state?.status === 'focus' && state?.session?.type === 'focus' && Array.isArray(state.session.websiteBlockDomains)
+    ? state.session.websiteBlockDomains
+    : [];
+  return normalizedDomains(sessionDomains);
+}
+function hostMatchesDomains(host, domains) {
+  return domains.some(domain => host === domain || host.endsWith(`.${domain}`));
+}
 function isProtectedFocus(s) {
   return s?.status === 'focus' && s?.session?.type === 'focus' &&
     s?.settings?.protection === 'websites' && Number.isFinite(s.session.targetEndAt) &&
@@ -38,18 +47,13 @@ async function setRules(nextState) {
   let error = '';
   try {
     if (isProtectedFocus(state) && overrideUntil <= Date.now()) {
-      const domains = allowedDomainsFor(state);
-      const rules = [{
-        id: RULE_ID, priority: 1,
+      const domains = restrictedDomainsFor(state);
+      const allowedDomains = allowedDomainsFor(state);
+      const rules = domains.map((domain, i) => ({
+        id: RULE_ID + i, priority: 1,
         action: { type: 'redirect', redirect: { extensionPath: '/blocked.html' } },
-        condition: { regexFilter: '^https?://', resourceTypes: ['main_frame'] },
-      }];
-      // Keep the POMIBERRY app open so the user can end the session or change settings.
-      rules.push({ id: 2, priority: 2, action: { type: 'allow' }, condition: { urlFilter: '||127.0.0.1:4173^', resourceTypes: ['main_frame'] } });
-      rules.push({ id: 3, priority: 2, action: { type: 'allow' }, condition: { urlFilter: '||localhost:4173^', resourceTypes: ['main_frame'] } });
-      for (const [i, domain] of domains.entries()) {
-        rules.push({ id: 10 + i, priority: 2, action: { type: 'allow' }, condition: { requestDomains: [domain], resourceTypes: ['main_frame'] } });
-      }
+        condition: { requestDomains: [domain], ...(allowedDomains.length ? { excludedRequestDomains: allowedDomains } : {}), resourceTypes: ['main_frame'] },
+      }));
       await clearRules();
       await chrome.declarativeNetRequest.updateDynamicRules({ addRules: rules });
       protectionActive = true;
@@ -63,7 +67,7 @@ async function setRules(nextState) {
     try { await clearRules(); } catch { /* Fail open; never report blocking as active. */ }
     protectionActive = false;
   }
-  const status = { connected: true, protectionActive, status: state.status, allowedDomains: allowedDomainsFor(state), error, updatedAt: Date.now() };
+  const status = { connected: true, protectionActive, status: state.status, allowedDomains: allowedDomainsFor(state), restrictedDomains: restrictedDomainsFor(state), error, updatedAt: Date.now() };
   await chrome.storage.local.set({ pomiberryState: state, pomiberryStatus: status });
   return status;
 }
@@ -235,8 +239,9 @@ chrome.webNavigation.onBeforeNavigate.addListener(details => {
     try {
       const url = new URL(details.url), host = url.hostname.toLowerCase();
       const app = (host === '127.0.0.1' || host === 'localhost') && url.port === '4173';
-      const allowed = app || allowedDomainsFor(pomiberryState).some(domain => host === domain || host.endsWith(`.${domain}`));
-      if (!allowed) rememberBlockedTab(details.tabId, details.url);
+      const allowed = app || hostMatchesDomains(host, allowedDomainsFor(pomiberryState));
+      const restricted = hostMatchesDomains(host, restrictedDomainsFor(pomiberryState));
+      if (restricted && !allowed) rememberBlockedTab(details.tabId, details.url);
     } catch { /* Ignore invalid or non-web navigation URLs. */ }
   });
 });

@@ -13,7 +13,7 @@ async function syncPomiberryState() {
     : saved.settings.allowedDomains;
   const state={
     status:saved.status,
-    session:saved.session?{type:saved.session.type,startedAt:saved.session.startedAt,targetEndAt:saved.session.targetEndAt,durationMinutes:saved.session.durationMinutes,websiteDomains:saved.session.websiteDomains}:null,
+    session:saved.session?{type:saved.session.type,startedAt:saved.session.startedAt,targetEndAt:saved.session.targetEndAt,durationMinutes:saved.session.durationMinutes,websiteDomains:saved.session.websiteDomains,websiteBlockDomains:saved.session.websiteBlockDomains}:null,
     taskTitle:currentTask?.title||'',
     settings:{protection:saved.settings.protection,allowedDomains:sessionDomains,focusMinutes:saved.settings.focusMinutes},
   };
