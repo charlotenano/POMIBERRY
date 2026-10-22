@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "POMIBERRY Focus Companion",
+  "version": "0.1.0",
+  "description": "Shows the POMIBERRY widget across Chrome tabs and applies your focus website allowlist.",
+  "permissions": ["declarativeNetRequest", "storage", "alarms", "webNavigation"],
+  "host_permissions": ["<all_urls>"],
+  "background": { "service_worker": "service-worker.js" },
+  "content_scripts": [
+    { "matches": ["http://*/*", "https://*/*"], "exclude_matches": ["http://127.0.0.1:4173/*", "http://localhost:4173/*"], "js": ["pixel-timer.js", "widget.js"], "run_at": "document_idle" },
+    { "matches": ["http://127.0.0.1:4173/*", "http://localhost:4173/*"], "js": ["focus-bridge.js"], "run_at": "document_idle" }
+  ],
+  "web_accessible_resources": [{ "resources": ["strawberry.svg"], "matches": ["http://*/*", "https://*/*"] }],
+  "action": { "default_title": "POMIBERRY focus status", "default_popup": "popup.html" }
+}

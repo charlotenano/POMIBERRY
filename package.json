@@ -1,0 +1,13 @@
+{
+  "name": "pomiberry",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "A cozy, local-first focus companion.",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "engines": { "node": ">=20" }
+}
